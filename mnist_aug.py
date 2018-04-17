@@ -51,33 +51,37 @@ def data_generator():
     # until now all good
 
     idx_enlarge_train = np.random.choice(np.arange(240000), size=120000, replace=False)
-    idx_tile_train = np.arange(240000)[~idx_enlarge_train]
+    # idx_tile_train = np.arange(240000)[~idx_enlarge_train]
     idx_enlarge_test = np.random.choice(np.arange(40000), size=20000, replace=False)
-    idx_tile_test = np.arange(40000)[~idx_enlarge_test]
+    # idx_tile_test = np.arange(40000)[~idx_enlarge_test]
 
     train_x_enlarge = imresize(train_img[idx_enlarge_train])
-    train_x_tile = im_tile(train_img[idx_tile_train])
-    train_x = np.concatenate((train_x_enlarge, train_x_tile), axis=0)
-    train_y_label = np.concatenate((train_label[idx_enlarge_train], train_label[idx_tile_train]), axis=0)
+    train_x_tile = im_tile(np.delete(train_img, idx_enlarge_train, axis=0))
+
+    train_x_all = np.concatenate((train_x_enlarge, train_x_tile), axis=0)
+    train_y_label = np.concatenate((train_label[idx_enlarge_train], np.delete(train_label, idx_enlarge_train, axis=0)), axis=0)
     train_y_label =  np.array([np.where(r==1)[0][0] for r in list(train_y_label)])
     test_x_enlarge = imresize(test_img[idx_enlarge_test])
-    test_x_tile = im_tile(test_img[idx_tile_test])
+    test_x_tile = im_tile(np.delete(test_img, idx_enlarge_test, axis=0))
     test_x = np.concatenate((test_x_enlarge, test_x_tile), axis=0)
-    test_y_label = np.concatenate((test_label[idx_enlarge_test],test_label[idx_tile_test]), axis=0)
+    test_y_label = np.concatenate((test_label[idx_enlarge_test],np.delete(test_label, idx_enlarge_test, axis=0)), axis=0)
     test_y_label =  np.array([np.where(r==1)[0][0] for r in list(test_y_label)])
 
 
     # splite validation set
-    valid_idx = np.random.choice(240000, 40000, replace=False)
-    train_idx = np.arange(240000)[~valid_idx]
+    valid_idx = np.random.choice(np.arange(240000), 40000, replace=False)
+    # train_idx = np.arange(240000)[~valid_idx]
+    # print train_idx.shape
 
-    train_x = train_x[train_idx]
-    train_y = train_y_label[train_idx]
+    train_x = np.delete(train_x_all, valid_idx, axis=0)
+    train_y = np.delete(train_y_label, valid_idx, axis=0)
 
-    valid_x = train_x[valid_idx]
-    valid_y = train_x[valid_idx]
+    valid_x = train_x_all[valid_idx]
+    valid_y = train_y_label[valid_idx]
 
     test_y = test_y_label
+
+    print train_x.shape, valid_x.shape, test_x.shape
 
 
 
@@ -100,7 +104,7 @@ def data_generator():
     # print train_y_label[230080]
     # plt.show()
 
-    return (train_x, train_y), (valid_x, valid_y), (test_x, test_y)
+    return (train_x.reshape((-1, 56 * 56)).astype(np.float32), train_y.astype(np.int64)), (valid_x.reshape((-1, 56 * 56)).astype(np.float32), valid_y.astype(np.int64)), (test_x.reshape((-1, 56 * 56)).astype(np.float32), test_y.astype(np.int64))
 
 # data_generator()
 
